@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" logicalFilePath="db.migration"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+
+    <changeSet id="init_tables" author="e.shurupov" runAlways="false" runOnChange="true">
+        <comment>Создание таблиц БД</comment>
+        <sqlFile path="sql.init/create_tables.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+</databaseChangeLog>

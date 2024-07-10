@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: connect.publications
+  datasource:
+    url: jdbc:postgres://localhost:5432/connect
+    username: postgres
+    password: postgres
+
+  liquibase:
+    change-log: classpath:db.migration/db.changelog-master.xml
+    driver-class-name: org.postgresql.Driver
+    database-change-log-lock-table: LIQ_DATABASECHANGELOGLOCK
+    database-change-log-table: LIQ_DATABASECHANGELOG
+
