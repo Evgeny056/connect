@@ -1,9 +1,9 @@
 package com.connectpublications.exception;
 
 import lombok.AllArgsConstructor;
-import lombok.Setter;
+import lombok.Getter;
 
-@Setter
+@Getter
 @AllArgsConstructor
 public class ErrorMessage {
     private String errorMessage;

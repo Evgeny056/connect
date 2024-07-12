@@ -1,4 +1,4 @@
-package com.connectpublications.model.dto;
+package com.connectpublications.model.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,5 +1,11 @@
 package com.connectpublications.model.entity;
 
+import com.connectpublications.serializator.UserListSerializer;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -48,6 +54,13 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "follower_id")
     )
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "userId", scope = User.class)
+    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = UserListSerializer.class)
     private List<User> followers = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "followers")
+    @JsonIgnore
+    private List<User> following = new ArrayList<>();
 
 }

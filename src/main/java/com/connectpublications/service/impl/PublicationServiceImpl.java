@@ -4,8 +4,12 @@ import com.connectpublications.exception.PublicationNotFoundException;
 import com.connectpublications.exception.UserNotFoundException;
 import com.connectpublications.mapper.CommentMapper;
 import com.connectpublications.mapper.PublicationMapper;
-import com.connectpublications.model.dto.CreateCommentRequestDto;
-import com.connectpublications.model.dto.CreatePostRequestDto;
+import com.connectpublications.messagin.producer.MessageProducer;
+import com.connectpublications.model.dto.request.CreateCommentRequestDto;
+import com.connectpublications.model.dto.request.CreatePostRequestDto;
+import com.connectpublications.model.dto.request.LikeRequestDto;
+import com.connectpublications.model.dto.response.CommentResponseDto;
+import com.connectpublications.model.dto.response.PublicationResponseDto;
 import com.connectpublications.model.entity.Comment;
 import com.connectpublications.model.entity.Publication;
 import com.connectpublications.model.entity.User;
@@ -15,6 +19,7 @@ import com.connectpublications.repository.UserRepository;
 import com.connectpublications.service.PublicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,23 +33,25 @@ public class PublicationServiceImpl implements PublicationService {
     private final UserRepository userRepository;
     private final PublicationRepository publicationRepository;
     private final CommentMapper commentMapper;
+    private final MessageProducer messageProducer;
 
     @Override
-    public Publication createPost(CreatePostRequestDto createPostRequestDto) {
+    @Transactional
+    public PublicationResponseDto createPost(CreatePostRequestDto createPostRequestDto) {
         User authorPost = userRepository.findById(createPostRequestDto.getAuthorId())
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE
                         + createPostRequestDto.getAuthorId()));
 
-        Publication publicationResponse = publicationMapper.toEntity(createPostRequestDto);
-        publicationResponse.setAuthor(authorPost);
-        publicationRepository.save(publicationResponse);
-        //sent rabbit
-        return publicationResponse;
+        Publication publication = publicationMapper.toEntity(createPostRequestDto);
+        publication.setAuthor(authorPost);
+        publicationRepository.save(publication);
+        messageProducer.sentMessageToNewPublicationQueue(publicationMapper.toPublicationBrokerDto(publication));
+        return publicationMapper.toPublicationResponseDto(publication);
     }
 
     @Override
-    public Comment createComment(CreateCommentRequestDto createCommentRequestDto) {
-
+    @Transactional
+    public CommentResponseDto createComment(CreateCommentRequestDto createCommentRequestDto) {
         User author = userRepository.findById(createCommentRequestDto.getAuthorId())
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE
                         + createCommentRequestDto.getAuthorId()));
@@ -57,7 +64,21 @@ public class PublicationServiceImpl implements PublicationService {
         comment.setAuthorComment(author);
         comment.setPublication(publication);
         commentRepository.save(comment);
-        //отправить в очередь
-        return comment;
+
+        messageProducer.sentMessageNotificationNewComment(commentMapper.toNewCommentBrokerDto(comment));
+
+        return commentMapper.toCommentResponseDto(comment);
+    }
+
+
+    @Transactional
+    public void addLikePublication(LikeRequestDto likeRequestDto) {
+        Publication publication = publicationRepository.findById(likeRequestDto.getPublicationId())
+                .orElseThrow(() -> new PublicationNotFoundException(PUBLICATION_NOT_FOUND_MESSAGE));
+
+        int countLike = publication.getCountLike();
+        publication.setCountLike(countLike + 1);
+        publicationRepository.save(publication);
+        messageProducer.sentMessageNewLike(likeRequestDto);
     }
 }
