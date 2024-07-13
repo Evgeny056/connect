@@ -10,4 +10,6 @@ public interface MessageProducer {
     void sentMessageNotificationNewPublication(NotificationFollowerBrokerDto notificationFollowerBrokerDto);
     void sentMessageNotificationNewComment(NewCommentBrokerDto newCommentBrokerDto);
     void sentMessageNewLike(LikeRequestDto likeRequestDto);
+    void sentMessageNotificationNewCommentOwner(NewCommentBrokerDto newCommentBrokerDto);
+    void sentMessageNewLikeOwner(LikeRequestDto likeRequestDto);
 }

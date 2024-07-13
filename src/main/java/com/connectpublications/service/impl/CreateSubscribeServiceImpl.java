@@ -42,9 +42,6 @@ public class CreateSubscribeServiceImpl implements CreateSubscribeService {
 
         userRepository.save(user);
         userRepository.save(follower);
-
-
-        //отправить сообщения в брокер о подписке user'a
     }
 
     public void unfollowUser(SubscribeRequestDto subscribeRequestDto) {
@@ -59,8 +56,5 @@ public class CreateSubscribeServiceImpl implements CreateSubscribeService {
 
         userRepository.save(user);
         userRepository.save(follower);
-
-        //отправить сообщения в брокер о отписке user'a надо ли?
-
     }
 }

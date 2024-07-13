@@ -7,7 +7,7 @@ import com.connectpublications.model.dto.broker.NotificationFollowerBrokerDto;
 import com.connectpublications.model.dto.request.LikeRequestDto;
 import com.connectpublications.service.ActivityService;
 import com.connectpublications.service.NotificationService;
-import com.connectpublications.service.impl.SubscriptionsService;
+import com.connectpublications.service.SubscribeService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,16 +26,15 @@ import org.springframework.stereotype.Component;
 public class ConsumerRabbit implements MessageListener {
 
     private final ObjectMapper jacksonObjectMapper;
-    private final SubscriptionsService subscriptionsService;
+    private final SubscribeService subscriptionsService;
     private final NotificationService notificationService;
     private final ActivityService activityService;
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = RabbitMQConfig.NEW_PUBLICATIONS_QUEUE, durable = "true"),
+            value = @Queue(value = RabbitMQConfig.NEW_PUBLICATIONS_QUEUE),
             exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_PUBLISHER),
             key = "newPublication"))
     public void handleNewPublicationQueue(String message) {
-
         try {
             NewPublicationBrokerDto newPublicationBrokerDto = jacksonObjectMapper.readValue(message, NewPublicationBrokerDto.class);
             log.info("Received message from NewPublicationQueue: {}", newPublicationBrokerDto.toString());
@@ -45,29 +44,43 @@ public class ConsumerRabbit implements MessageListener {
         }
     }
 
+    /**
+     * Уведомления подписчикам о новой публикации
+     */
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = RabbitMQConfig.SUBSCRIBER_NOTIFICATIONS_QUEUE, durable = "true"),
+            value = @Queue(value = RabbitMQConfig.SUBSCRIBER_NOTIFICATIONS_QUEUE),
             exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_NAME),
-            key = "newPublication"))
-    public void notificationSubscribesNewPublication(String message, @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey) {
-       if (routingKey.equalsIgnoreCase("newPublication")) {
-           try {
-               NotificationFollowerBrokerDto notificationFollowerBrokerDto =
-                       jacksonObjectMapper.readValue(message, NotificationFollowerBrokerDto.class);
-               log.info("A message was received from the new publications queue: {}", notificationFollowerBrokerDto.toString());
-               notificationService.handleNotificationNewPublication(notificationFollowerBrokerDto);
-           } catch (JsonProcessingException e) {
-               log.error("Error parsing JSON message: {}", e.getMessage());
-           }
-       }
+            key = "newPublication"),
+            containerFactory = "rabbitListenerContainerFactory1")
+
+    public void notificationSubscribesNewPublication(String message,
+                                                     @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey
+    ) {
+        if (routingKey.equalsIgnoreCase("newPublication")) {
+            try {
+                NotificationFollowerBrokerDto notificationFollowerBrokerDto =
+                        jacksonObjectMapper.readValue(message, NotificationFollowerBrokerDto.class);
+                log.info("A message was received from the new publications queue: {}", notificationFollowerBrokerDto.toString());
+                notificationService.handleNotificationNewPublication(notificationFollowerBrokerDto);
+            } catch (JsonProcessingException e) {
+                log.error("Error parsing JSON message: {}", e.getMessage());
+            }
+        }
     }
 
+    /**
+     * Уведомление подписчиков о новом комментарии или лайке
+     */
+
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = RabbitMQConfig.SUBSCRIBER_NOTIFICATIONS_QUEUE, durable = "true"),
+            value = @Queue(value = RabbitMQConfig.SUBSCRIBER_NOTIFICATIONS_QUEUE),
             exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_NAME),
-            key = "newComment"))
-    public void handleNewCommentFollower(String message,@Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey) {
+            key = {"newComment", "newLike"}),
+            containerFactory = "rabbitListenerContainerFactory2")
+    public void handleNewCommentFollower(String message,
+                                         @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey
+    ) {
         if (routingKey.equalsIgnoreCase("newComment")) {
             try {
                 NewCommentBrokerDto newCommentBrokerDto = jacksonObjectMapper.readValue(message, NewCommentBrokerDto.class);
@@ -77,13 +90,30 @@ public class ConsumerRabbit implements MessageListener {
                 log.error("Error parsing JSON message: {}", e.getMessage());
             }
         }
+
+        if (routingKey.equalsIgnoreCase("newLike")) {
+            try {
+                LikeRequestDto likeRequestDto = jacksonObjectMapper.readValue(message, LikeRequestDto.class);
+                log.info("New Like notification subscribers");
+                notificationService.handleNotificationFollowersNewLike(likeRequestDto);
+            } catch (JsonProcessingException e) {
+                log.error("Error parsing JSON message: {}", e.getMessage());
+            }
+        }
     }
 
+    /**
+     * Уведомления для владельца публикации
+     */
+
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = RabbitMQConfig.SUBSCRIBER_NOTIFICATIONS_QUEUE, durable = "true"),
-            exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_NAME),
-            key = {"newComment", "newLike"}))
-    public void ownerAlerts(String message, @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey) {
+            value = @Queue(value = RabbitMQConfig.ACTIVITY_NOTIFICATIONS_QUEUE),
+            exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_OWNER),
+            key = {"newComment", "newLike"}),
+            containerFactory = "rabbitListenerContainerFactory3")
+    public void ownerAlerts(String message,
+                            @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey
+    ) {
         if (routingKey.equalsIgnoreCase("newComment")) {
             try {
                 NewCommentBrokerDto newCommentBrokerDto = jacksonObjectMapper.readValue(message, NewCommentBrokerDto.class);
@@ -92,11 +122,11 @@ public class ConsumerRabbit implements MessageListener {
 
                 activityService.notificationOwnerNewComment(newCommentBrokerDto);
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                log.error("Error parsing JSON message: {}", e.getMessage());
             }
         }
 
-        if(routingKey.equalsIgnoreCase("newLike")) {
+        if (routingKey.equalsIgnoreCase("newLike")) {
             try {
                 LikeRequestDto likeRequestDto = jacksonObjectMapper.readValue(message, LikeRequestDto.class);
                 log.info("Sending a message about a new like to the owner from {} {}",
@@ -108,5 +138,4 @@ public class ConsumerRabbit implements MessageListener {
             }
         }
     }
-
 }

@@ -18,7 +18,6 @@ public class UserListSerializer extends JsonSerializer<List<User>> {
             jsonGenerator.writeStringField("userId", user.getUserId().toString());
             jsonGenerator.writeStringField("firstName", user.getFirstName());
             jsonGenerator.writeStringField("lastName", user.getLastName());
-            // Добавьте другие необходимые поля для сериализации
             jsonGenerator.writeEndObject();
         }
         jsonGenerator.writeEndArray();

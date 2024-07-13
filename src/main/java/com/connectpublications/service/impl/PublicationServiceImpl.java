@@ -66,6 +66,7 @@ public class PublicationServiceImpl implements PublicationService {
         commentRepository.save(comment);
 
         messageProducer.sentMessageNotificationNewComment(commentMapper.toNewCommentBrokerDto(comment));
+        messageProducer.sentMessageNotificationNewCommentOwner(commentMapper.toNewCommentBrokerDto(comment));
 
         return commentMapper.toCommentResponseDto(comment);
     }
@@ -79,6 +80,8 @@ public class PublicationServiceImpl implements PublicationService {
         int countLike = publication.getCountLike();
         publication.setCountLike(countLike + 1);
         publicationRepository.save(publication);
+
         messageProducer.sentMessageNewLike(likeRequestDto);
+        messageProducer.sentMessageNewLikeOwner(likeRequestDto);
     }
 }

@@ -4,6 +4,7 @@ import com.connectpublications.exception.PublicationNotFoundException;
 import com.connectpublications.exception.UserNotFoundException;
 import com.connectpublications.model.dto.broker.NewCommentBrokerDto;
 import com.connectpublications.model.dto.broker.NotificationFollowerBrokerDto;
+import com.connectpublications.model.dto.request.LikeRequestDto;
 import com.connectpublications.model.entity.Publication;
 import com.connectpublications.model.entity.User;
 import com.connectpublications.repository.PublicationRepository;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Slf4j
@@ -44,10 +44,10 @@ public class NotificationServiceImpl implements NotificationService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(sender);
         message.setTo(follower.getEmail());
-        message.setSubject("Новое уведомление");
+        message.setSubject("Новая публикация");
         message.setText(notificationFollowerBrokerDto.getMessage());
         mailSender.send(message);
-        log.info("Notification of a new publication sent to user {} {} by {}", follower.getFirstName(), follower.getLastName(), follower.getEmail());
+        log.info("Notification of a new publication send to user {} {} by {}", follower.getFirstName(), follower.getLastName(), follower.getEmail());
     }
 
     @Override
@@ -57,6 +57,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> new PublicationNotFoundException(PUBLICATION_NOT_FOUND_MESSAGE));
 
         List<User> followers = publication.getAuthor().getFollowers();
+
         for (User follower : followers) {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(sender);
@@ -68,6 +69,26 @@ public class NotificationServiceImpl implements NotificationService {
             log.info("Notification of a new comment on a subscriber's post sent to user {} {} by {}",
                     follower.getFirstName(), follower.getLastName(), follower.getEmail());
         }
+    }
+
+    @Override
+    public void handleNotificationFollowersNewLike(LikeRequestDto likeRequestDto) {
+        Publication publication = publicationRepository.findByIdWithAuthorAndFollowers(likeRequestDto.getPublicationId())
+                .orElseThrow(() -> new PublicationNotFoundException(PUBLICATION_NOT_FOUND_MESSAGE));
+
+        List<User> followers = publication.getAuthor().getFollowers();
+        for (User follower : followers) {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(sender);
+            message.setTo(follower.getEmail());
+            message.setSubject("Уведомление о новом лайке");
+            message.setText("У публикации пользователя " + publication.getAuthor().getFirstName() + " " +
+                    publication.getAuthor().getLastName() + " появился новый лайк");
+            mailSender.send(message);
+            log.info("Notification subscriber about new like. Subscriber: {} {} {}",
+                    follower.getFirstName(), follower.getLastName(), follower.getEmail());
+        }
+
     }
 
 }

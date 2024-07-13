@@ -22,6 +22,7 @@ public class ProducerRabbit implements MessageProducer {
 
     private final RabbitTemplate rabbitTemplate;
     private final RabbitTemplate rabbitTemplatePublish;
+    private final RabbitTemplate rabbitTemplateOwner;
     private final ObjectMapper jacksonObjectMapper;
 
     @Override
@@ -61,11 +62,33 @@ public class ProducerRabbit implements MessageProducer {
     }
 
     @Override
+    public void sentMessageNotificationNewCommentOwner(NewCommentBrokerDto newCommentBrokerDto) {
+        log.info("Sending a notification about a new user comment Owner to publication id: {}", newCommentBrokerDto.getPublicationId());
+        try {
+            String messageBroker = jacksonObjectMapper.writeValueAsString(newCommentBrokerDto);
+            rabbitTemplateOwner.convertAndSend(RabbitMQConfig.DIRECT_EXCHANGE_OWNER, "newComment", messageBroker );
+        } catch (JsonProcessingException e) {
+            throw new ErrorConvertJsonStringException(CONVERT_MESSAGE_ERROR);
+        }
+    }
+
+    @Override
     public void sentMessageNewLike(LikeRequestDto likeRequestDto) {
-        log.info("\"Sending a notification about a new like to publication id: {}", likeRequestDto.getPublicationId());
+        log.info("Sending a notification about a new like to publication id: {}", likeRequestDto.getPublicationId());
         try {
             String messageBroker = jacksonObjectMapper.writeValueAsString(likeRequestDto);
             rabbitTemplate.convertAndSend(RabbitMQConfig.DIRECT_EXCHANGE_NAME, "newLike", messageBroker );
+        } catch (JsonProcessingException e) {
+            throw new ErrorConvertJsonStringException(CONVERT_MESSAGE_ERROR);
+        }
+    }
+
+    @Override
+    public void sentMessageNewLikeOwner(LikeRequestDto likeRequestDto) {
+        log.info("Sending a notification to owner about a new like to publication id: {}", likeRequestDto.getPublicationId());
+        try {
+            String messageBroker = jacksonObjectMapper.writeValueAsString(likeRequestDto);
+            rabbitTemplateOwner.convertAndSend(RabbitMQConfig.DIRECT_EXCHANGE_OWNER, "newLike", messageBroker );
         } catch (JsonProcessingException e) {
             throw new ErrorConvertJsonStringException(CONVERT_MESSAGE_ERROR);
         }

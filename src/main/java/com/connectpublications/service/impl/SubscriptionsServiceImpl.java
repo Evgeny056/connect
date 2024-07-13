@@ -6,6 +6,7 @@ import com.connectpublications.model.dto.broker.NewPublicationBrokerDto;
 import com.connectpublications.model.dto.broker.NotificationFollowerBrokerDto;
 import com.connectpublications.model.entity.User;
 import com.connectpublications.repository.UserRepository;
+import com.connectpublications.service.SubscribeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class SubscriptionsService {
+public class SubscriptionsServiceImpl implements SubscribeService {
 
     private static final String AUTHOR_PUBLICATION_NOT_FOUND = "Author publication not found";
 
