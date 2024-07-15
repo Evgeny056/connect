@@ -30,6 +30,9 @@ public class ConsumerRabbit implements MessageListener {
     private final NotificationService notificationService;
     private final ActivityService activityService;
 
+
+    /**Чтение сообщений из очереди новые публикации*/
+
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = RabbitMQConfig.NEW_PUBLICATIONS_QUEUE),
             exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_PUBLISHER),
@@ -45,32 +48,7 @@ public class ConsumerRabbit implements MessageListener {
     }
 
     /**
-     * Уведомления подписчикам о новой публикации
-     */
-
-    @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = RabbitMQConfig.SUBSCRIBER_NOTIFICATIONS_QUEUE),
-            exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_NAME),
-            key = "newPublication"),
-            containerFactory = "rabbitListenerContainerFactory1")
-
-    public void notificationSubscribesNewPublication(String message,
-                                                     @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey
-    ) {
-        if (routingKey.equalsIgnoreCase("newPublication")) {
-            try {
-                NotificationFollowerBrokerDto notificationFollowerBrokerDto =
-                        jacksonObjectMapper.readValue(message, NotificationFollowerBrokerDto.class);
-                log.info("A message was received from the new publications queue: {}", notificationFollowerBrokerDto.toString());
-                notificationService.handleNotificationNewPublication(notificationFollowerBrokerDto);
-            } catch (JsonProcessingException e) {
-                log.error("Error parsing JSON message: {}", e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Уведомление подписчиков о новом комментарии или лайке
+     * Уведомление подписчиков о новом комментарии, лайке, новой публикации
      */
 
     @RabbitListener(bindings = @QueueBinding(
@@ -96,6 +74,17 @@ public class ConsumerRabbit implements MessageListener {
                 LikeRequestDto likeRequestDto = jacksonObjectMapper.readValue(message, LikeRequestDto.class);
                 log.info("New Like notification subscribers");
                 notificationService.handleNotificationFollowersNewLike(likeRequestDto);
+            } catch (JsonProcessingException e) {
+                log.error("Error parsing JSON message: {}", e.getMessage());
+            }
+        }
+
+        if (routingKey.equalsIgnoreCase("newPublication")) {
+            try {
+                NotificationFollowerBrokerDto notificationFollowerBrokerDto =
+                        jacksonObjectMapper.readValue(message, NotificationFollowerBrokerDto.class);
+                log.info("A message was received from the new publications queue: {}", notificationFollowerBrokerDto.toString());
+                notificationService.handleNotificationNewPublication(notificationFollowerBrokerDto);
             } catch (JsonProcessingException e) {
                 log.error("Error parsing JSON message: {}", e.getMessage());
             }
