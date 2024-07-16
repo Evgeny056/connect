@@ -55,9 +55,9 @@ public class ConsumerRabbit implements MessageListener {
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = RabbitMQConfig.SUBSCRIBER_NOTIFICATIONS_QUEUE),
             exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_NAME),
-            key = {"newComment", "newLike"}),
+            key = {"newComment", "newLike", "newPublication"}),
             containerFactory = "rabbitListenerContainerFactory2")
-    public void handleNewCommentFollower(String message,
+    public void handleNotificationFollower(String message,
                                          @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey
     ) {
         if (routingKey.equalsIgnoreCase("newComment")) {
