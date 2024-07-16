@@ -5,6 +5,8 @@ import com.connectpublications.config.TestConfigurationConfig;
 import com.connectpublications.model.dto.UserDto;
 import com.connectpublications.model.dto.broker.NewCommentBrokerDto;
 import com.connectpublications.model.dto.broker.NewPublicationBrokerDto;
+import com.connectpublications.model.dto.broker.NotificationFollowerBrokerDto;
+import com.connectpublications.model.dto.request.LikeRequestDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +51,9 @@ public class ProducerRabbitTest extends TestConfigurationConfig {
 
     private UserDto userDto;
 
+    private NotificationFollowerBrokerDto notificationFollowerBrokerDto;
+    private LikeRequestDto likeRequestDto;
+
     @BeforeEach
     public void setup() {
 
@@ -69,6 +74,18 @@ public class ProducerRabbitTest extends TestConfigurationConfig {
                 .authorComment(userDto)
                 .publicationId(UUID.fromString("d1c0aa05-1848-4666-8474-288dae823d10"))
                 .build();
+
+        notificationFollowerBrokerDto = notificationFollowerBrokerDto.builder()
+                .followerId(UUID.fromString("5f697ccd-d404-4c02-9ddb-af74761f52c0"))
+                .author(userDto)
+                .message("Новая публикация от " + userDto.getFirstName() + " " +
+                        userDto.getLastName())
+                .build();
+
+        likeRequestDto = likeRequestDto.builder()
+                .publicationId(UUID.fromString("d1c0aa05-1848-4666-8474-288dae823d10"))
+                .author(userDto)
+                .build();
     }
 
 
@@ -77,8 +94,17 @@ public class ProducerRabbitTest extends TestConfigurationConfig {
         String message = jacksonObjectMapper.writeValueAsString(newPublicationBrokerDto);
         producerRabbit.sentMessageToNewPublicationQueue(newPublicationBrokerDto);
 
-        verify(rabbitTemplate, times(1))
+        verify(rabbitTemplatePublish, times(1))
                 .convertAndSend(eq(RabbitMQConfig.NEW_PUBLICATIONS_QUEUE), eq("newPublication"), eq(message));
+    }
+
+    @Test
+    public void testSentMessageNotificationNewPublication() throws JsonProcessingException {
+        String message = jacksonObjectMapper.writeValueAsString(notificationFollowerBrokerDto);
+        producerRabbit.sentMessageNotificationNewPublication(notificationFollowerBrokerDto);
+
+        verify(rabbitTemplate, times(1))
+                .convertAndSend(eq(RabbitMQConfig.DIRECT_EXCHANGE_NAME), eq("newPublication"), eq(message));
     }
 
     @Test
@@ -88,6 +114,33 @@ public class ProducerRabbitTest extends TestConfigurationConfig {
 
         verify(rabbitTemplate, times(1))
                 .convertAndSend(eq(RabbitMQConfig.DIRECT_EXCHANGE_NAME), eq("newComment"), eq(message));
+    }
+
+    @Test
+    public void testSentMessageNotificationNewCommentOwner() throws JsonProcessingException {
+        String message = jacksonObjectMapper.writeValueAsString(newCommentBrokerDto);
+        producerRabbit.sentMessageNotificationNewCommentOwner(newCommentBrokerDto);
+
+        verify(rabbitTemplateOwner, times(1))
+                .convertAndSend(eq(RabbitMQConfig.DIRECT_EXCHANGE_OWNER), eq("newComment"), eq(message));
+    }
+
+    @Test
+    public void testSentMessageNewLike() throws JsonProcessingException {
+        String message = jacksonObjectMapper.writeValueAsString(likeRequestDto);
+        producerRabbit.sentMessageNewLike(likeRequestDto);
+
+        verify(rabbitTemplate, times(1))
+                .convertAndSend(eq(RabbitMQConfig.DIRECT_EXCHANGE_NAME), eq("newLike"), eq(message));
+    }
+
+    @Test
+    public void testSentMessageNewLikeOwner() throws JsonProcessingException{
+        String message = jacksonObjectMapper.writeValueAsString(likeRequestDto);
+        producerRabbit.sentMessageNewLikeOwner(likeRequestDto);
+
+        verify(rabbitTemplateOwner, times(1))
+                .convertAndSend(eq(RabbitMQConfig.DIRECT_EXCHANGE_OWNER), eq("newLike"), eq(message));
     }
 }
 
