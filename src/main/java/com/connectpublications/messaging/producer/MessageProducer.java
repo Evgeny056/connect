@@ -1,4 +1,4 @@
-package com.connectpublications.messagin.producer;
+package com.connectpublications.messaging.producer;
 
 import com.connectpublications.model.dto.broker.NewCommentBrokerDto;
 import com.connectpublications.model.dto.broker.NewPublicationBrokerDto;

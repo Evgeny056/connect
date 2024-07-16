@@ -4,7 +4,7 @@ import com.connectpublications.exception.PublicationNotFoundException;
 import com.connectpublications.exception.UserNotFoundException;
 import com.connectpublications.mapper.CommentMapper;
 import com.connectpublications.mapper.PublicationMapper;
-import com.connectpublications.messagin.producer.MessageProducer;
+import com.connectpublications.messaging.producer.MessageProducer;
 import com.connectpublications.model.dto.request.CreateCommentRequestDto;
 import com.connectpublications.model.dto.request.CreatePostRequestDto;
 import com.connectpublications.model.dto.request.LikeRequestDto;

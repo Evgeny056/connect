@@ -1,4 +1,4 @@
-package com.connectpublications.messagin.consumer;
+package com.connectpublications.messaging.consumer;
 
 import com.connectpublications.config.RabbitMQConfig;
 import com.connectpublications.model.dto.broker.NewCommentBrokerDto;
@@ -36,7 +36,8 @@ public class ConsumerRabbit implements MessageListener {
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = RabbitMQConfig.NEW_PUBLICATIONS_QUEUE),
             exchange = @Exchange(value = RabbitMQConfig.DIRECT_EXCHANGE_PUBLISHER),
-            key = "newPublication"))
+            key = "newPublication"),
+            containerFactory = "rabbitListenerContainerFactory1")
     public void handleNewPublicationQueue(String message) {
         try {
             NewPublicationBrokerDto newPublicationBrokerDto = jacksonObjectMapper.readValue(message, NewPublicationBrokerDto.class);

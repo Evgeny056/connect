@@ -1,7 +1,7 @@
 package com.connectpublications.service.impl;
 
 import com.connectpublications.exception.UserNotFoundException;
-import com.connectpublications.messagin.producer.MessageProducer;
+import com.connectpublications.messaging.producer.MessageProducer;
 import com.connectpublications.model.dto.broker.NewPublicationBrokerDto;
 import com.connectpublications.model.dto.broker.NotificationFollowerBrokerDto;
 import com.connectpublications.model.entity.User;

@@ -1,6 +1,4 @@
-package com.connectpublications.messagin.consumer;
-
-import com.rabbitmq.client.Channel;
+package com.connectpublications.messaging.consumer;
 
 public interface MessageListener {
     void handleNewPublicationQueue(String message);

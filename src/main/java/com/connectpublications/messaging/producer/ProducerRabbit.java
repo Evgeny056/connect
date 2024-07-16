@@ -1,4 +1,4 @@
-package com.connectpublications.messagin.producer;
+package com.connectpublications.messaging.producer;
 
 import com.connectpublications.config.RabbitMQConfig;
 import com.connectpublications.exception.ErrorConvertJsonStringException;

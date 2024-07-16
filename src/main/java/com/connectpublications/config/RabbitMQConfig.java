@@ -1,5 +1,6 @@
 package com.connectpublications.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -97,4 +98,8 @@ public class RabbitMQConfig {
         return factory;
     }
 
+    @Bean
+    public ObjectMapper jacksonObjectMapper(){
+        return new ObjectMapper();
+    }
 }
