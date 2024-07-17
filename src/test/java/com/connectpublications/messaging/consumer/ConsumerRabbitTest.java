@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -26,11 +25,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = TestConfigurationConfig.class)
+@SpringBootTest(classes = {TestConfigurationConfig.class, ConsumerRabbit.class})
 public class ConsumerRabbitTest extends TestConfigurationConfig {
 
 
-    @InjectMocks
+    @Autowired
     private ConsumerRabbit consumerRabbit;
 
     @MockBean
@@ -104,7 +103,6 @@ public class ConsumerRabbitTest extends TestConfigurationConfig {
     @Test
     public void testHandleNewPublicationQueue() throws Exception {
         String message = jacksonObjectMapper.writeValueAsString(newPublicationBrokerDto);
-
         consumerRabbit.handleNewPublicationQueue(message);
 
         verify(subscribeService, times(1)).handleNewPublication(any(NewPublicationBrokerDto.class));
@@ -112,7 +110,7 @@ public class ConsumerRabbitTest extends TestConfigurationConfig {
 
     @Test
     public void testHandleNotificationFollowerPublication() throws Exception {
-        String message = jacksonObjectMapper.writeValueAsString(newPublicationBrokerDto);
+        String message = jacksonObjectMapper.writeValueAsString(notificationFollowerBrokerDto);
         consumerRabbit.handleNotificationFollower(message, "newPublication");
 
         verify(notificationService, times(1))

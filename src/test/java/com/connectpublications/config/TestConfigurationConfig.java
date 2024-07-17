@@ -61,6 +61,11 @@ public class TestConfigurationConfig {
         return dataSource;
     }
 
+    @Bean
+    public ObjectMapper jacksonObjectMapper() {
+        return new ObjectMapper();
+    }
+
     @BeforeAll
     static void setUp() {
         rabbitMQContainer.start();

@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,10 +26,10 @@ import static org.mockito.Mockito.verify;
 
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = TestConfigurationConfig.class)
+@SpringBootTest(classes = {TestConfigurationConfig.class, ProducerRabbit.class})
 public class ProducerRabbitTest extends TestConfigurationConfig {
 
-    @InjectMocks
+    @Autowired
     private ProducerRabbit producerRabbit;
 
     @MockBean(name = "rabbitTemplate")
@@ -68,8 +67,6 @@ public class ProducerRabbitTest extends TestConfigurationConfig {
 
     @BeforeEach
     public void setup() {
-
-        jacksonObjectMapper = new ObjectMapper();
 
         userDto = new UserDto();
                 userDto.setUserId((UUID.fromString(USER_DTO_ID)));
@@ -110,7 +107,7 @@ public class ProducerRabbitTest extends TestConfigurationConfig {
         producerRabbit.sentMessageToNewPublicationQueue(newPublicationBrokerDto);
 
         verify(rabbitTemplatePublish, times(1))
-                .convertAndSend(eq(RabbitMQConfig.NEW_PUBLICATIONS_QUEUE), eq("newPublication"), eq(message));
+                .convertAndSend(eq(RabbitMQConfig.DIRECT_EXCHANGE_PUBLISHER), eq("newPublication"), eq(message));
     }
 
     @Test
