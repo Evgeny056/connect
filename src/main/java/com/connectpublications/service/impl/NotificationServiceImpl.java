@@ -63,8 +63,8 @@ public class NotificationServiceImpl implements NotificationService {
             message.setFrom(sender);
             message.setTo(follower.getEmail());
             message.setSubject("Уведомление о новом комментарии");
-            message.setText("У публикации пользователя " + newCommentBrokerDto.getAuthorComment().getFirstName() + " " +
-                    newCommentBrokerDto.getAuthorComment().getLastName() + " появился новый комментарий");
+            message.setText("У публикации пользователя " + publication.getAuthor().getFirstName() + " " +
+                    publication.getAuthor().getLastName() + " появился новый комментарий");
             mailSender.send(message);
             log.info("Notification of a new comment on a subscriber's post sent to user {} {} by {}",
                     follower.getFirstName(), follower.getLastName(), follower.getEmail());

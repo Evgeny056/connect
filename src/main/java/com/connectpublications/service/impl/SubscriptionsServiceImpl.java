@@ -31,11 +31,9 @@ public class SubscriptionsServiceImpl implements SubscribeService {
         List<User> followers = authorPublication.getFollowers();
 
         for (User follower : followers) {
-            NotificationFollowerBrokerDto notificationFollowerBrokerDto = NotificationFollowerBrokerDto.builder()
-                    .followerId(follower.getUserId())
-                    .message("Новая публикация от " + authorPublication.getFirstName() + " " +
-                            authorPublication.getLastName())
-                    .build();
+            NotificationFollowerBrokerDto notificationFollowerBrokerDto = new NotificationFollowerBrokerDto();
+            notificationFollowerBrokerDto.setFollowerId(follower.getUserId());
+            notificationFollowerBrokerDto.setMessage("Новая публикация от " + authorPublication.getFirstName() + " " + authorPublication.getLastName());
             messageProducer.sentMessageNotificationNewPublication(notificationFollowerBrokerDto);
         }
     }
