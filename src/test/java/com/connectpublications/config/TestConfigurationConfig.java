@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -20,6 +21,7 @@ import javax.sql.DataSource;
 
 @Testcontainers
 @SpringBootTest
+@TestConfiguration
 public class TestConfigurationConfig {
 
     @Container
@@ -58,12 +60,6 @@ public class TestConfigurationConfig {
         dataSource.setPassword(postgreSQLContainer.getPassword());
         return dataSource;
     }
-
-    @Bean
-    public ObjectMapper jacksonObjectMapper(){
-        return new ObjectMapper();
-    }
-
 
     @BeforeAll
     static void setUp() {
